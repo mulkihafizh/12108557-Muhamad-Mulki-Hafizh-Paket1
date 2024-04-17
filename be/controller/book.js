@@ -1,9 +1,10 @@
 import db from "../model/index.js";
 import jwt from "jsonwebtoken";
+import fs from "fs";
 
 export const create = async (req, res) => {
   try {
-    const { title, author, publisher, publication_year, cover, category_id } =
+    const { title, author, publisher, publication_year,stock, cover, category_id } =
       req.body;
     const oldBook = await db.Book.findOne({ where: { title: title } });
     if (oldBook) {
@@ -14,6 +15,7 @@ export const create = async (req, res) => {
       author,
       publisher,
       publication_year,
+      stock,
       cover: title + ".jpg",
     });
 
@@ -89,7 +91,24 @@ export const findAll = async (req, res) => {
 export const findById = async (req, res) => {
   try {
     const { id } = req.params;
-    const book = await db.Book.findOne({ where: { id: id } });
+    const book = await db.Book.findOne({
+      where: { id: id },
+      include: [
+        {
+          model: db.Category,
+          as: "categories",
+        },
+        {
+          model: db.Review,
+          as: "reviews",
+          include: [
+            {
+              model: db.User,
+            },
+          ],
+        },
+      ],
+    });
     if (!book) {
       return res.status(404).json({ message: "Book not found" });
     }
@@ -101,11 +120,14 @@ export const findById = async (req, res) => {
 export const update = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, author, publisher, publication_year, cover, category_id } =
+    const { title, author, publisher, publication_year, cover, category_id,stock } =
       req.body;
     const book = await db.Book.findOne({ where: { id: id } });
     if (!book) {
       return res.status(404).json({ message: "Book not found" });
+    }
+    if (book.cover !== title + ".jpg") {
+      fs.unlinkSync(`./public/uploads/${book.cover}`);
     }
     await book.update({
       title,
@@ -113,9 +135,11 @@ export const update = async (req, res) => {
       publisher,
       publication_year,
       cover,
+      stock
     });
+
     const bookCategory = await db.BookCategory.findOne({
-      where: { book_id: id, category_id },
+      where: { book_id: id, category_id: category_id },
     });
     if (!bookCategory) {
       await db.BookCategory.create({

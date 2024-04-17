@@ -2,6 +2,28 @@ import db from "../model/index.js";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+export const createStaff = async (req, res) => {
+  try {
+    const { username, password, email, address, name } = req.body;
+    const oldUser = await db.User.findOne({ where: { username: username } });
+    if (oldUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+    const user = await db.User.create({
+      username: username,
+      password: bcryptjs.hashSync(password, 8),
+      email: email,
+      address: address,
+      name: name,
+      role: "staff",
+    });
+
+    return res.status(201).json(user);
+  } catch (e) {
+    return res.status(500).json({ message: e.message });
+  }
+};
+
 export const register = async (req, res) => {
   try {
     const { username, password, email, address, name } = req.body;
@@ -67,6 +89,15 @@ export const deleteModel = async (req, res) => {
     return res.status(500).json({ message: e.message });
   }
 };
+export const logout = async (req, res) => {
+  try {
+    res.clearCookie("token");
+    res.clearCookie("role");
+    return res.status(200).json({ message: "Logout success" });
+  } catch (e) {
+    return res.status(500).json({ message: e.message });
+  }
+};
 export const findAll = async (req, res) => {
   try {
     const users = await db.User.findAll();
@@ -89,6 +120,21 @@ export const findById = async (req, res) => {
 };
 export const update = async (req, res) => {
   try {
+    const { id } = req.params;
+    const { username, password, email, address, name } = req.body;
+    const user = await db.User.findOne({ where: { id: id } });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    await user.update({
+      username: username,
+      password: bcryptjs.hashSync(password, 8),
+      email: email,
+      address: address,
+      name: name,
+    });
+    await user.save();
+    return res.status(200).json(user);
   } catch (e) {
     return res.status(500).json({ message: e.message });
   }

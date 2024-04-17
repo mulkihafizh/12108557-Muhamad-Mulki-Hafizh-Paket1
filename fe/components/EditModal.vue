@@ -3,7 +3,7 @@
     class="fixed flex flex-col items-center justify-center bg-opacity-60 top-0 right-0 z-[100] min-h-screen max-h-screen w-full bg-black"
   >
     <div class="card bg-white w-[500px] rounded-lg">
-      <header class="border-b p-4">Rating Buku</header>
+      <header class="border-b p-4">Edit Ulasan Buku</header>
       <main class="p-4 flex flex-wrap gap-4">
         <NuxtImg
           class="object-cover min-h-[200px] min-w-[130px] max-h-[200px] max-w-[130px] rounded-lg"
@@ -64,11 +64,13 @@ const toast = useToast();
 export default defineComponent({
   setup(props, ctx) {
     const store = useModalStore();
-    const book = ref(store.data as any);
+    const book = ref(store.data as any) as any;
+    const oldData = ref(store.oldData as any) as any;
     const data = ref({
-      rating: 0,
-      review: "",
+      rating: oldData.value.rating ,
+      review: oldData.value.review,
     });
+    
     return { store, book, data };
   },
   methods: {
@@ -79,18 +81,18 @@ export default defineComponent({
       try {
         await $fetch("http://localhost:5000/api/review/" + this.book.id, {
           credentials: "include",
-          method: "POST",
+          method: "PUT",
           body: JSON.stringify({
             book_id: this.book.id,
             rating: this.data.rating,
             review: this.data.review,
           }),
         });
-        toast.success("Ulasan berhasil ditambahkan");
+        toast.success("Ulasan berhasil diedit");
         this.store.closeModal();
         window.location.reload();
       } catch (error) {
-        toast.error("Gagal menambahkan ulasan");
+        toast.error("Gagal mengedit ulasan");
       }
     },
   },

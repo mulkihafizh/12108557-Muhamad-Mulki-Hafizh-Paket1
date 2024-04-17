@@ -1,60 +1,37 @@
 <template>
   <div class="card flex flex-col gap-2">
-    <NuxtImg
-      class="rounded-lg h-[340px] object-cover"
-      :src="`http://localhost:5000/uploads/${book.cover}`"
-    />
+    <NuxtImg class="rounded-lg h-[340px] object-cover" :src="`http://localhost:5000/uploads/${book.cover}`" />
     <h1 class="font-semibold text-lg truncate">{{ book.title }}</h1>
+    <p>{{ book.stock }}</p>
     <div class="actions flex gap-2 flex-wrap">
-      <button
-        @click="pinjam"
-        class="bg-purple-500 rounded-lg bgHover text-white px-2"
-        v-if="
-          book.lendings.length === 0 ||
-          book.lendings[0].lending_status === false
-        "
-      >
+      <button :disabled="book.stock < 1 " @click="pinjam" class="bg-purple-500 disabled:bg-opacity-60 rounded-lg bgHover text-white px-2" v-if="
+        book.lendings.length === 0 ||
+        (book.lendings.length > 0 &&
+          book.lendings[0].lending_status === false)
+      ">
         Pinjam
       </button>
-      <button
-        @click="kembalikan"
-        class="bg-purple-500 rounded-lg bgHover text-white px-2"
-        v-else
-      >
+      <button @click="kembalikan" class="bg-purple-500 rounded-lg bgHover text-white px-2" v-else>
         Kembalikan
       </button>
-      <nuxt-link
-        :to="`/buku/${book.id}`"
-        class="rounded-lg border text-purple-500 border-purple-500 px-2"
-      >
+      <nuxt-link :to="`/buku/${book.id}`" class="rounded-lg border text-purple-500 border-purple-500 px-2">
         Detail
       </nuxt-link>
       <button class="grow justify-end flex">
-        <Icon
-          @click="collection"
-          v-if="book.collections.length === 0"
-          class="text-purple-500"
-          name="ic:outline-bookmark-add"
-          size="24"
-        />
-        <Icon
-          @click="collection"
-          v-else
-          class="text-purple-500"
-          name="ic:round-bookmark-remove"
-          size="24"
-        />
+        <Icon @click="collection" v-if="book.collections.length === 0" class="text-purple-500"
+          name="ic:outline-bookmark-add" size="24" />
+        <Icon @click="collection" v-else class="text-purple-500" name="ic:round-bookmark-remove" size="24" />
       </button>
-      <button
-        @click="review"
-        v-if="
-          book.reviews.length !== 0 ||
-          (book.lendings.length > book.reviews.length &&
-            book.lendings[0].lending_status === false)
-        "
-        class="basis-full text-center rounded-lg border text-purple-500 border-purple-500 px-2"
-      >
+      <button @click="review" v-if="
+
+        book.reviews.length === 0 && book.lendings.length > 0
+
+      " class="basis-full text-center rounded-lg border text-purple-500 border-purple-500 px-2">
         Ulas Buku
+      </button>
+      <button @click="editReview" v-else-if="book.reviews.length > 0" class=" basis-full text-center rounded-lg border text-purple-500
+        border-purple-500 px-2">
+        Edit Ulasan Buku
       </button>
     </div>
   </div>
@@ -63,6 +40,7 @@
 <script lang="ts">
 import { useToast } from "vue-toastification";
 import useModalStore from "~/stores/modal";
+
 const toast = useToast();
 
 export default defineComponent({
@@ -73,6 +51,7 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
+    const store = useModalStore();
     const book = ref(props.book);
     watch(
       () => props.book,
@@ -82,10 +61,12 @@ export default defineComponent({
     );
     return {
       book,
+      store,
     };
   },
   methods: {
     async pinjam() {
+      if(this.book.stock < 1) return toast.error("Stok buku habis");
       try {
         await $fetch("http://localhost:5000/api/lending/lend/" + this.book.id, {
           method: "POST",
@@ -101,9 +82,11 @@ export default defineComponent({
         toast.error("Gagal meminjam buku");
       }
     },
+    editReview() {
+      this.store.setEdit(this.book.reviews[0], this.book, true);
+    },
     review() {
-      const store = useModalStore();
-      store.setModal(this.book, true);
+      this.store.setModal(this.book, true);
     },
     async collection() {
       try {

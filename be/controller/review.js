@@ -8,7 +8,7 @@ export const create = async (req, res) => {
     const token = req.cookies.token;
     const user_id = jwt.verify(token, "secret").id;
 
-    const data = await db.Rating.create({
+    const data = await db.Review.create({
       rating,
       review,
       book_id: id,
@@ -23,7 +23,7 @@ export const create = async (req, res) => {
 export const deleteModel = async (req, res) => {
   try {
     const { id } = req.params;
-    const rating = await db.Rating.findOne({ where: { id: id } });
+    const rating = await db.Review.findOne({ where: { id: id } });
     if (!rating) {
       return res.status(404).json({ message: "rating not found" });
     }
@@ -35,7 +35,7 @@ export const deleteModel = async (req, res) => {
 };
 export const findAll = async (req, res) => {
   try {
-    const ratings = await db.Rating.findAll();
+    const ratings = await db.Review.findAll();
     return res.status(200).json(ratings);
   } catch (e) {
     return res.status(500).json({ message: e.message });
@@ -44,7 +44,7 @@ export const findAll = async (req, res) => {
 export const findById = async (req, res) => {
   try {
     const { id } = req.params;
-    const rating = await db.Rating.findOne({ where: { id: id } });
+    const rating = await db.Review.findOne({ where: { id: id } });
     if (!rating) {
       return res.status(404).json({ message: "rating not found" });
     }
@@ -57,7 +57,9 @@ export const update = async (req, res) => {
   try {
     const { id } = req.params;
     const { rating, review } = req.body;
-    const data = await db.Rating.findOne({ where: { id: id } });
+    const token = req.cookies.token;
+    const user_id = jwt.verify(token, "secret").id;
+    const data = await db.Review.findOne({ where: { id: id } });
     if (!data) {
       return res.status(404).json({ message: "rating not found" });
     }

@@ -13,6 +13,11 @@ export default (sequelize, Sequelize) => {
       type: Sequelize.STRING,
       allowNull: false,
     },
+    stock: {
+      type: Sequelize.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
     publisher: {
       type: Sequelize.STRING,
       allowNull: false,

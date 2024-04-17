@@ -15,13 +15,15 @@ const toast = useToast();
 export default defineComponent({
   async setup() {
     definePageMeta({
-      middleware: "is-login",
-    });
+      middleware: ["is-login","is-user"],
+
+    })
+
     const data = ref((await getBooks()) as any);
     return { data };
   },
   methods: {
-    async changeData(data: any) {
+    async changeData() {
       this.data = await getBooks();
     },
   },

@@ -9,7 +9,11 @@ import { useToast } from "vue-toastification";
 const toast = useToast();
 
 export default defineComponent({
+  
   setup() {
+    definePageMeta({
+      middleware:["is-admin","is-login"]
+    })
     return {};
   },
 });

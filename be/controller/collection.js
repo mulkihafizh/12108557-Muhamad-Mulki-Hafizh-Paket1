@@ -11,7 +11,9 @@ export const create = async (req, res) => {
     });
     if (oldColc) {
       await oldColc.destroy();
-      return res.status(200).json({ message: "Book removed from collection" });
+      return res
+        .status(200)
+        .json({ message: "collection removed from collection" });
     }
 
     const collection = await db.Collection.create({
@@ -27,20 +29,71 @@ export const create = async (req, res) => {
 export const deleteModel = async (req, res) => {
   try {
     const { id } = req.params;
-    const book = await db.Collection.findOne({ where: { id: id } });
-    if (!book) {
-      return res.status(404).json({ message: "Book not found" });
+    const collection = await db.Collection.findOne({ where: { id: id } });
+    if (!collection) {
+      return res.status(404).json({ message: "collection not found" });
     }
-    await book.destroy();
-    return res.status(200).json({ message: "Book deleted" });
+    await collection.destroy();
+    return res.status(200).json({ message: "collection deleted" });
   } catch (e) {
     return res.status(500).json({ message: e.message });
   }
 };
 export const findAll = async (req, res) => {
   try {
-    const books = await db.Collection.findAll();
-    return res.status(200).json(books);
+    const token = req.cookies.token;
+    const user_id = jwt.verify(token, "secret").id;
+    console.log(user_id);
+    const collections = await db.Collection.findAll({
+      order: [
+        ["createdAt", "DESC"],
+        [
+          { model: db.Book },
+          { model: db.Lending, as: "lendings" },
+          "createdAt",
+          "DESC",
+        ],
+      ],
+      where: {
+        user_id,
+      },
+      include: [
+        {
+          model: db.Book,
+          include: [
+            {
+              model: db.Category,
+              as: "categories",
+            },
+            {
+              model: db.Review,
+              as: "reviews",
+              required: false,
+              where: {
+                user_id,
+              },
+            },
+            {
+              model: db.Lending,
+              as: "lendings",
+              required: false,
+              where: {
+                user_id,
+              },
+            },
+            {
+              model: db.Collection,
+              as: "collections",
+              required: false,
+              where: {
+                user_id,
+              },
+            },
+          ],
+        },
+      ],
+    });
+    return res.status(200).json(collections);
   } catch (e) {
     return res.status(500).json({ message: e.message });
   }
@@ -48,11 +101,11 @@ export const findAll = async (req, res) => {
 export const findById = async (req, res) => {
   try {
     const { id } = req.params;
-    const book = await db.Collection.findOne({ where: { id: id } });
-    if (!book) {
-      return res.status(404).json({ message: "Book not found" });
+    const collection = await db.Collection.findOne({ where: { id: id } });
+    if (!collection) {
+      return res.status(404).json({ message: "collection not found" });
     }
-    return res.status(200).json(book);
+    return res.status(200).json(collection);
   } catch (e) {
     return res.status(500).json({ message: e.message });
   }
@@ -60,19 +113,19 @@ export const findById = async (req, res) => {
 export const update = async (req, res) => {
   try {
     const { id } = req.params;
-    const book = await db.Collection.findOne({ where: { id: id } });
-    if (!book) {
-      return res.status(404).json({ message: "Book not found" });
+    const collection = await db.Collection.findOne({ where: { id: id } });
+    if (!collection) {
+      return res.status(404).json({ message: "collection not found" });
     }
-    await book.update({
+    await collection.update({
       title,
       author,
       publisher,
       publication,
       cover,
     });
-    await book.save();
-    return res.status(200).json(book);
+    await collection.save();
+    return res.status(200).json(collection);
   } catch (e) {
     return res.status(500).json({ message: e.message });
   }

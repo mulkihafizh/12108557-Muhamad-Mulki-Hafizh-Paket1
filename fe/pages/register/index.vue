@@ -81,6 +81,9 @@ const toast = useToast();
 
 export default defineComponent({
   setup() {
+    definePageMeta({
+      middleware: "is-guest",
+    });
     const data = ref({
       email: "",
       username: "",

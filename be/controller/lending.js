@@ -13,6 +13,17 @@ export const create = async (req, res) => {
       lending_date: new Date(),
     });
 
+    const book = await db.Book.findOne({ where: { id } });
+    if (!book) {
+      return res.status(404).json({ message: "Book not found" });
+    }
+
+    await book.update({
+      stock: book.stock - 1,
+    });
+
+    await book.save()
+
     return res.status(201).json(lending);
   } catch (e) {
     return res.status(500).json({ message: e.message });
@@ -24,6 +35,17 @@ export const returnLending = async (req, res) => {
     const { id } = req.params;
     const token = req.cookies.token;
     const user_id = jwt.verify(token, "secret").id;
+
+    const book = await db.Book.findOne({ where: { id } });
+    if (!book) {
+      return res.status(404).json({ message: "Book not found" });
+    }
+
+    await book.update({
+      stock: book.stock + 1,
+    });
+
+    await book.save()
 
     const lending = await db.Lending.findOne({
       where: {
@@ -62,7 +84,33 @@ export const deleteModel = async (req, res) => {
 };
 export const findAll = async (req, res) => {
   try {
-    const lendings = await db.Lending.findAll();
+    const lendings = await db.Lending.findAll({
+      include: [
+        {
+          model: db.Book,
+        },
+        {
+          model: db.User,
+        },
+      ],
+    });
+    return res.status(200).json(lendings);
+  } catch (e) {
+    return res.status(500).json({ message: e.message });
+  }
+};
+export const findUsers = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    const user_id = jwt.verify(token, "secret").id;
+    const lendings = await db.Lending.findAll({
+      where: { user_id },
+      include: [
+        {
+          model: db.Book,
+        },
+      ],
+    });
     return res.status(200).json(lendings);
   } catch (e) {
     return res.status(500).json({ message: e.message });

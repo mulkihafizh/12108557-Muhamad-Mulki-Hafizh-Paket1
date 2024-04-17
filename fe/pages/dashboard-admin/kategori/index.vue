@@ -2,9 +2,12 @@
   <NuxtLayout name="dashboard">
     <main class="p-6 flex flex-col gap-4">
       <header><h1 class="text-2xl">Data Kategori</h1></header>
+      <div class="data flex gap-2 text-xl">
+        <span>Total Data: {{ data.length }}</span> 
+      </div>
       <div class="createAction flex justify-end gap-2">
         <button
-          @click="exportExcel(kategories, 'kategori')"
+          @click="exportToExcel()"
           class="bg-purple-500 px-4 py-2 rounded-lg text-white bgHover"
         >
           Export
@@ -22,13 +25,36 @@
           <th class="w-[200px]">Aksi</th>
         </thead>
         <tbody class="text-center [&>*:nth-child(even)]:bg-gray-200">
-          <tr class="[&>*]:py-2" v-for="(i, index) in kategories">
+          <tr class="[&>*]:py-2" v-for="(i, index) in data">
             <td>{{ index + 1 }}</td>
             <td>{{ i.name }}</td>
-            <td>1</td>
+            <td class="grid grid-cols-2 gap-2 p-2">
+              <button
+                @click="deleteCategory(i.id)"
+                class="px-2 py-1 rounded-lg bg-red-500"
+              >
+                Delete
+              </button>
+              <nuxt-link
+                :to="`/dashboard-admin/kategori/edit/${i.id}`"
+                class="px-2 py-1 rounded-lg bg-yellow-500"
+                >Edit</nuxt-link
+              >
+            </td>
           </tr>
         </tbody>
       </table>
+      <div class="flex  gap-2">
+        <button :disabled="pagination.page <= 1" @click="previousPage"
+          class="bg-purple-500 bgHover cursor-pointer px-2 py-1 disabled:bg-opacity-50  rounded-lg text-white">Previous</button>
+        <span  class="w-[30px] bg-slate-100 text-center" >
+          {{ pagination.page }}
+        </span>
+        <button 
+        :disabled="pagination.page >= pagination.maxPage"
+        @click="nextPage"
+          class="bg-purple-500 bgHover cursor-pointer px-2 py-1 disabled:bg-opacity-50  rounded-lg text-white">Next</button>
+      </div>
     </main>
   </NuxtLayout>
 </template>
@@ -39,8 +65,58 @@ const toast = useToast();
 
 export default defineComponent({
   async setup() {
-    const kategories = ref((await getKategori()) as any);
-    return { kategories };
+    definePageMeta({
+      middleware:["is-admin","is-login"]
+    })
+    const category = await getCategory() as any;
+    const pagination = ref({
+      page: 1,
+      perPage: 5,
+      maxPage: Math.ceil(category.length / 5)
+    })
+
+    const paginate = (data: any, page: number, perPage: number) => {
+      const start = (page - 1) * perPage;
+      const end = start + perPage;
+      return data.slice(start, end);
+    }
+
+    const data = ref(paginate(category, pagination.value.page, pagination.value.perPage))
+
+    return { data,pagination,category,paginate };
+  },
+  methods: {
+    nextPage() {
+      this.pagination.page++
+      this.data = this.paginate(this.category, this.pagination.page, this.pagination.perPage)
+    },
+    previousPage() {
+      this.pagination.page--
+      this.data = this.paginate(this.category, this.pagination.page, this.pagination.perPage)
+    },
+    exportToExcel() {
+      const data = this.data.map((i: any) => {
+        delete i.createdAt;
+        delete i.updatedAt;
+        return i;
+      });
+      exportExcel(data, "User");
+    },
+    async deleteCategory(id: any) {
+      try {
+        await $fetch("http://localhost:5000/api/category/" + id, {
+          method: "DELETE",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        toast.success("Kategori berhasil dihapus");
+        this.data = (await getCategory()) as any;
+      } catch (error) {
+        toast.error("Gagal menghapus kategori");
+      }
+    },
   },
 });
 </script>

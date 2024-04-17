@@ -18,7 +18,7 @@ app.use(
   })
 );
 
-// db.sequelize.sync();
+db.sequelize.sync();
 
 app.use("/api", router);
 

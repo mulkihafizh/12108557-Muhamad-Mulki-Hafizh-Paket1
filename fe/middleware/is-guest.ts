@@ -3,6 +3,10 @@ export default defineNuxtRouteMiddleware((to, from) => {
     return;
   }
   if (useCookie("token").value) {
-    return navigateTo("/dashboard");
+    if (useCookie("role").value === "user") {
+      return navigateTo("/dashboard");
+    } else {
+      return navigateTo("/dashboard-admin");
+    }
   }
 });

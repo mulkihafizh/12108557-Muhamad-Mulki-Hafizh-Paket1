@@ -5,7 +5,7 @@ import {
   findById,
   deleteModel,
   update,
-} from "../controller/book.js";
+} from "../controller/review.js";
 
 const router = express.Router();
 

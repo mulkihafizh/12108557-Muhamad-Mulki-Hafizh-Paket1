@@ -75,7 +75,7 @@ export default defineComponent({
       })
         .then((res: any) => {
           toast.success("Login Berhasil");
-          this.$cookies.set("role", res.role);
+          this.$cookies.set("role", res.user.role);
           if (res.user.role === "user") {
             this.$router.push("/dashboard");
           } else {

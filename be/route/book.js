@@ -14,6 +14,6 @@ router.post("/", upload.single("cover"), create);
 router.get("/", findAll);
 router.get("/:id", findById);
 router.delete("/:id", deleteModel);
-router.put("/:id", update);
+router.put("/:id", upload.single("cover"), update);
 
 export default router;

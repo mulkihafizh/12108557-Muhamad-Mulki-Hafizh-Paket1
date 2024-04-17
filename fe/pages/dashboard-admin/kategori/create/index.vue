@@ -22,7 +22,7 @@
             Submit
           </button>
           <nuxt-link
-            to="/dashboard-admin/buku"
+            to="/dashboard-admin/kategori"
             class="border border-purple-500 px-4 py-1 text-purple-500 rounded-lg"
           >
             Kembali
@@ -39,6 +39,9 @@ const toast = useToast();
 
 export default defineComponent({
   setup() {
+    definePageMeta({
+      middleware:["is-admin","is-login"]
+    })
     const data = ref({ name: "" });
     return { data };
   },

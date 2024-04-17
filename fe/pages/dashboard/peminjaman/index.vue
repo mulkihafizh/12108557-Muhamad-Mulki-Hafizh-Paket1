@@ -12,12 +12,21 @@
           <th>Status</th>
         </thead>
         <tbody class="text-center [&>*:nth-child(even)]:bg-gray-200">
-          <tr class="[&>*]:py-2" v-for="(i, index) in 10">
-            <td>1</td>
-            <td>1</td>
-            <td>1</td>
-            <td>1</td>
-            <td>1</td>
+          <tr class="[&>*]:py-2" v-for="(i, index) in data">
+            <td>{{ index + 1 }}</td>
+            <td>{{ i.Book.title }}</td>
+            <td>{{ formatDate(i.lending_date) }}</td>
+            <td>{{ formatDate(i.return_date) }}</td>
+            <td>
+              <span v-if="i.lending_status == false">Dikembalikan</span>
+              <button
+                v-else
+                class="bg-red-500 rounded-lg bgHover px-2 py-1"
+                @click="kembalikan(i.Book)"
+              >
+                Kembalikan
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -30,10 +39,34 @@ import { useToast } from "vue-toastification";
 const toast = useToast();
 
 export default defineComponent({
+  
   async setup() {
     definePageMeta({
-      middleware: "is-login",
+      middleware: ["is-login","is-user"],
+
     });
+    const data = ref((await getUserLending()) as any);
+    return {
+      data,
+    };
+  },
+  methods: {
+    async kembalikan(book: any) {
+      try {
+        await $fetch("http://localhost:5000/api/lending/return/" + book.id, {
+          method: "POST",
+          credentials: "include",
+          body: JSON.stringify(book),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        this.data = (await getUserLending()) as any;
+        toast.success("Buku berhasil dikembalikan");
+      } catch (error) {
+        toast.error("Gagal mengembalikan buku");
+      }
+    },
   },
 });
 </script>

@@ -6,11 +6,13 @@ import {
   deleteModel,
   update,
   returnLending,
+  findUsers,
 } from "../controller/lending.js";
 
 const router = express.Router();
 
 router.post("/lend/:id", create);
+router.get("/user/", findUsers);
 router.post("/return/:id", returnLending);
 router.get("/", findAll);
 router.get("/:id", findById);
