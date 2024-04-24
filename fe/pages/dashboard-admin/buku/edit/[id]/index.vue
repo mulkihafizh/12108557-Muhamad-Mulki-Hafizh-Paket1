@@ -30,8 +30,14 @@
           </div>
           <div class="form-group flex flex-col gap-2">
             <label for="stock">Stock</label>
-            <input class="w-[300px] rounded-lg p-2 border" type="integer" id="stock" placeholder="Masukkan Stock Buku"
-              required v-model="data.stock" />
+            <input
+              class="w-[300px] rounded-lg p-2 border"
+              type="integer"
+              id="stock"
+              placeholder="Masukkan Stock Buku"
+              required
+              v-model="data.stock"
+            />
           </div>
           <div class="form-group flex flex-col gap-2">
             <label for="penerbit">Penerbit</label>
@@ -106,12 +112,11 @@ const toast = useToast();
 export default defineComponent({
   async setup() {
     definePageMeta({
-      middleware:["is-admin","is-login"]
-    })
+      middleware: ["is-admin", "is-login"],
+    });
     const params = useRoute().params.id;
     const buku = ref((await getBookById(params as any)) as any);
     const categories = ref((await getCategory()) as any);
-    console.log(categories);
 
     const data = ref({
       category_id: "",
@@ -140,6 +145,7 @@ export default defineComponent({
       formData.append("publication_year", this.data.publication_year);
       formData.append("category_id", this.data.category_id);
       formData.append("cover", this.data.cover);
+      formData.append("stock", this.data.stock.toString());
 
       await $fetch("http://localhost:5000/api/book/" + this.params, {
         method: "PUT",

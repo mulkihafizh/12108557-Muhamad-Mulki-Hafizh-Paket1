@@ -96,6 +96,7 @@ export default defineComponent({
       formData.append("publication_year", this.data.publication_year);
       formData.append("category_id", this.data.category_id);
       formData.append("cover", this.data.cover);
+      formData.append("stock", this.data.stock.toString());
 
       await $fetch("http://localhost:5000/api/book", {
         method: "POST",
